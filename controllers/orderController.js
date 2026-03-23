@@ -284,15 +284,16 @@ const generateDeliveryOtp = async (req, res) => {
     order.deliveryOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
     await order.save();
 
-    // Send OTP to customer email
+    // Send OTP to customer email (non-blocking)
     const sendEmail = require('../utils/sendEmail');
-    await sendEmail({
+    sendEmail({
       email: order.customer.email,
       subject: 'Your Delivery OTP - Seedha Order',
       message: `Your delivery confirmation OTP is: ${otp}\n\nShare this with the delivery rider to confirm your order has been delivered.\n\nThis OTP expires in 10 minutes.\n\nOrder: #ORDER-${order._id.toString().slice(-5).toUpperCase()}\nRestaurant: ${order.restaurant?.name}`,
-    });
+    }).then(() => console.log('✅ Delivery OTP sent to', order.customer.email))
+      .catch(e => console.error('❌ Delivery OTP email failed:', e.message));
 
-    res.json({ message: 'OTP sent to customer email' });
+    res.json({ message: 'OTP sent to customer email', otp: otp });
   } catch (error) {
     console.error('OTP generation error:', error);
     res.status(500).json({ message: 'Failed to send OTP' });
