@@ -53,7 +53,7 @@ const getLiveRestaurants = async (req, res) => {
   try {
     const { latitude, longitude, maxDistance = 10000 } = req.query; // maxDistance in meters (10km = 10000m)
 
-    let query = { isSubscribed: true };
+    let query = {};
     
     // If user provides location, filter by 10km range
     if (latitude && longitude) {
@@ -63,7 +63,7 @@ const getLiveRestaurants = async (req, res) => {
             type: 'Point',
             coordinates: [parseFloat(longitude), parseFloat(latitude)]
           },
-          $maxDistance: parseInt(maxDistance) // 10km radius
+          $maxDistance: parseInt(maxDistance)
         }
       };
     }

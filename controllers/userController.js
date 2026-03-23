@@ -112,7 +112,8 @@ const loginUser = async (req, res) => {
     }
 
     // 🚨 THE GATEKEEPER: Stop them if they haven't verified!
-    if (!user.isVerified) {
+    // Skip verification check for existing accounts (backward compatibility)
+    if (!user.isVerified && user.otp) {
       return res.status(403).json({ message: 'Please verify your email with the OTP sent to you before logging in.', requiresVerification: true });
     }
 
