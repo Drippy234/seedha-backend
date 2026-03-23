@@ -43,27 +43,24 @@ const registerUser = async (req, res) => {
     // Save the user (with the OTP attached) to MongoDB
     await user.save();
 
-    // Send the email!
-    const message = `Welcome to Seedha Order! \n\nYour verification code is: ${generatedOtp} \n\nThis code will expire in 10 minutes.`;
-
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: 'Seedha Order - Your OTP Code',
-        message: message,
-      });
-      console.log(`✅ OTP Email sent to ${user.email}`);
-    } catch (emailError) {
-      console.error('❌ Email failed to send:', emailError);
-      // We still let the registration succeed, but log the error
-    }
-    // --- END OTP LOGIC ---
-
-    // 4. Send a success message back to the frontend
+    // 4. Send response immediately — don't wait for email
     res.status(201).json({
       message: 'User created successfully! Please check your email for the OTP.',
       user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role }
     });
+
+    // Send email in background (non-blocking)
+    const message = `Welcome to Seedha Order! \n\nYour verification code is: ${generatedOtp} \n\nThis code will expire in 10 minutes.`;
+    sendEmail({
+      email: user.email,
+      subject: 'Seedha Order - Your OTP Code',
+      message: message,
+    }).then(() => {
+      console.log(`✅ OTP Email sent to ${user.email}`);
+    }).catch((emailError) => {
+      console.error('❌ Email failed to send:', emailError);
+    });
+    // --- END OTP LOGIC ---
 
   } catch (error) {
     console.error(error);
