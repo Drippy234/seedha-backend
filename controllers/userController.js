@@ -11,7 +11,12 @@ const registerUser = async (req, res) => {
     // 1. Check if the user already exists
     let user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({ message: 'A user with this email already exists!' });
+      // If they exist but never verified, delete and let them re-register
+      if (!user.isVerified) {
+        await User.deleteOne({ email });
+      } else {
+        return res.status(400).json({ message: 'A user with this email already exists!' });
+      }
     }
 
     // 2. Scramble (Hash) the password
